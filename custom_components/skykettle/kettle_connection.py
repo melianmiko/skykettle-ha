@@ -4,6 +4,7 @@ import traceback
 from time import monotonic
 
 from bleak import BleakClient
+from bleak_retry_connector import establish_connection, BleakClientWithServiceCache
 
 from homeassistant.components import bluetooth
 
@@ -17,7 +18,6 @@ class KettleConnection(SkyKettle):
     UUID_SERVICE = "6e400001-b5a3-f393e-0a9e-50e24dcca9e"
     UUID_TX = "6e400002-b5a3-f393-e0a9-e50e24dcca9e"
     UUID_RX = "6e400003-b5a3-f393-e0a9-e50e24dcca9e"
-    CONNECTION_TIMEOUT = 10
     BLE_RECV_TIMEOUT = 1.5
     MAX_TRIES = 3
     TRIES_INTERVAL = 0.5
@@ -92,12 +92,12 @@ class KettleConnection(SkyKettle):
             raise DisposedError()
         if self._client and self._client.is_connected: return
         self._device = bluetooth.async_ble_device_from_address(self.hass, self._mac)
-        self._client = BleakClient(self._device)
         _LOGGER.debug("Connecting to the Kettle...")
-        await asyncio.wait_for(
-            # Bluez connection timeout is not working actually
-            self._client.connect(timeout=KettleConnection.CONNECTION_TIMEOUT),
-            timeout=KettleConnection.CONNECTION_TIMEOUT
+        self._client = await establish_connection(
+            BleakClientWithServiceCache,
+            self._device,
+            self._device.name or "Unknown Device",
+            max_attempts=3
         )
         _LOGGER.debug("Connected to the Kettle")
         await self._client.start_notify(KettleConnection.UUID_RX, self._rx_callback)
