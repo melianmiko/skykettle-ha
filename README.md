@@ -63,12 +63,12 @@ The default entity names are listed below. Note that some entities can be missed
 
 ### water_heater.*kettle_model*
 This is main entity to control water boiling and heating. There are five operation modes:
-* Off - the kettle is off, not heating at all.
-* Heat - just heat water to the desired temperature and keep this temperature. Without boiling. Useful when water already boiled and you need just to warm it up.
-* Boil - boil water and turn off (switch to "Off" mode).
-* Boil+heat - boil water, wait until temperature drops to the desired temperature and keep this temperature.
-* Lamp - use kettle as night light, color changes between the selected ones (see below).
-* Light - use kettle as night light but keep the only one selected color (see below).
+* `off` - the kettle is off, not heating at all.
+* `heat` - just heat water to the desired temperature and keep this temperature. Without boiling. Useful when water already boiled and you need just to warm it up.
+* `boli` - boil water and turn off (switch to "Off" mode).
+* `boil_heat` - boil water, wait until temperature drops to the desired temperature and keep this temperature.
+* `lamp` - use kettle as night light, color changes between the selected ones (see below).
+* `light` - use kettle as night light but keep the only one selected color (see below).
 
 ### light.*kettle_model*_light (Light)
 This entity allows to control the "Light" mode. You can select brightness and color when this mode is active. The "Light" mode will be enabled automatically when this virtual light is on.
@@ -112,7 +112,7 @@ Diagnostic entity, shows percent of successfull connections and polls.
 sequence:
   - service: water_heater.set_operation_mode
     data:
-      operation_mode: Boil
+      operation_mode: boil
     target:
       entity_id: water_heater.skykettle_rk_g211
 ```
@@ -131,7 +131,7 @@ sequence:
 sequence:
   - service: water_heater.set_operation_mode
     data:
-      operation_mode: Boil+Heat
+      operation_mode: boil_heat
     target:
       entity_id: water_heater.skykettle_rk_g211
   - service: water_heater.set_temperature
