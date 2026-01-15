@@ -23,6 +23,9 @@ async def async_setup_entry(hass, entry, async_add_entities, discovery_info=None
 
 class SkyWaterHeater(WaterHeaterEntity):
     """Representation of a SkyKettle water_heater device."""
+    _attr_has_entity_name = True
+    _attr_name = None
+    _attr_translation_key = "skykettle"
 
     def __init__(self, hass, entry):
         """Initialize the water_heater device."""
@@ -48,10 +51,6 @@ class SkyWaterHeater(WaterHeaterEntity):
     def name(self):
         """Name of the entity."""
         return (FRIENDLY_NAME + " " + self.entry.data.get(CONF_FRIENDLY_NAME, "")).strip()
-
-    @property
-    def icon(self):
-        return "mdi:kettle"
 
     @property
     def device_class(self):

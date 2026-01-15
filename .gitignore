@@ -1,3 +1,10 @@
 console_logger.py
 test.py
 __pycache__
+
+# IDE configurations
+/.idea
+
+# Development environment
+/.venv
+/venv

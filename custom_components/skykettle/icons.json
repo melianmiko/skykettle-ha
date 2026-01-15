@@ -1,0 +1,25 @@
+{
+  "entity": {
+    "water_heater": {
+      "skykettle": {
+        "default": "mdi:kettle",
+        "state": {
+          "off": "mdi:kettle-off"
+        },
+        "state_attributes": {
+          "operation_mode": {
+            "default": "mdi:kettle-off",
+            "state": {
+              "off": "mdi:kettle-off",
+              "Boil": "mdi:kettle-steam",
+              "Boil+Heat": "mdi:kettle-steam-outline",
+              "Heat": "mdi:heat-wave",
+              "Lamp": "mdi:lightbulb-night",
+              "Light": "mdi:lightbulb"
+            }
+          }
+        }
+      }
+    }
+  }
+}
