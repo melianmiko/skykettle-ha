@@ -93,13 +93,20 @@ class KettleConnection(SkyKettle):
         if self._disposed:
             raise DisposedError()
         if self._client and self._client.is_connected: return
-        self._device = bluetooth.async_ble_device_from_address(self.hass, self._mac)
+        self._device = bluetooth.async_ble_device_from_address(
+            self.hass, self._mac, connectable=True
+        )
+        if not self._device:
+            raise IOError("Device not found")
         _LOGGER.debug("Connecting to the Kettle...")
         self._client = await establish_connection(
             BleakClientWithServiceCache,
             self._device,
             self._device.name or "Unknown Device",
-            max_attempts=3
+            max_attempts=3,
+            ble_device_callback=lambda: bluetooth.async_ble_device_from_address(
+                self.hass, self._mac, connectable=True
+            ),
         )
         _LOGGER.debug("Connected to the Kettle")
         await self._client.start_notify(KettleConnection.UUID_RX, self._rx_callback)
