@@ -4,7 +4,7 @@ import logging
 from homeassistant.components.sensor import (SensorDeviceClass, SensorEntity,
                                              SensorStateClass)
 from homeassistant.const import (CONF_FRIENDLY_NAME, PERCENTAGE, UnitOfEnergy,
-                                 UnitOfTime)
+                                 UnitOfPower, UnitOfTime)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import EntityCategory
 
@@ -17,6 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 SENSOR_TYPE_WATER_FRESHNESS = "water_freshness"
 SENSOR_TYPE_SUCCESS_RATE = "success_rate"
 SENSOR_TYPE_ENERGY = "energy"
+SENSOR_TYPE_POWER = "power"
 SENSOR_TYPE_ONTIME = "ontime"
 SENSOR_TYPE_HEATER_ON_COUNT = "heater_on_count"
 SENSOR_TYPE_USER_ON_COUNT = "user_on_count"
@@ -31,6 +32,7 @@ async def async_setup_entry(hass, entry, async_add_entities):
     if model_code in [SkyKettle.MODELS_4]: # RK-G2xxS, RK-M13xS, RK-M21xS, RK-M223S but not sure
         async_add_entities([
             SkySensor(hass, entry, SENSOR_TYPE_ENERGY),
+            SkySensor(hass, entry, SENSOR_TYPE_POWER),
             SkySensor(hass, entry, SENSOR_TYPE_ONTIME),
             SkySensor(hass, entry, SENSOR_TYPE_HEATER_ON_COUNT),
             SkySensor(hass, entry, SENSOR_TYPE_USER_ON_COUNT),
@@ -82,6 +84,8 @@ class SkySensor(SensorEntity):
         """Name of the entity."""
         if self.sensor_type == SENSOR_TYPE_ENERGY:
             return (FRIENDLY_NAME + " " + self.entry.data.get(CONF_FRIENDLY_NAME, "")).strip() + " total energy consumed"
+        if self.sensor_type == SENSOR_TYPE_POWER:
+            return (FRIENDLY_NAME + " " + self.entry.data.get(CONF_FRIENDLY_NAME, "")).strip() + " current power"
         if self.sensor_type == SENSOR_TYPE_ONTIME:
             return (FRIENDLY_NAME + " " + self.entry.data.get(CONF_FRIENDLY_NAME, "")).strip() + " total work time"
         if self.sensor_type == SENSOR_TYPE_HEATER_ON_COUNT:
@@ -103,6 +107,8 @@ class SkySensor(SensorEntity):
             return "mdi:dip-switch"
         if self.sensor_type == SENSOR_TYPE_WATER_FRESHNESS:
             return "mdi:water-sync"
+        if self.sensor_type == SENSOR_TYPE_POWER:
+            return "mdi:flash"
         if self.sensor_type == SENSOR_TYPE_SUCCESS_RATE:
             return "mdi:bluetooth-connect"
         return None
@@ -111,6 +117,8 @@ class SkySensor(SensorEntity):
     def available(self):
         if self.sensor_type == SENSOR_TYPE_ENERGY:
             return self.kettle.available and self.kettle.energy_wh != None
+        if self.sensor_type == SENSOR_TYPE_POWER:
+            return self.kettle.available and self.kettle.energy_wh is not None
         if self.sensor_type == SENSOR_TYPE_ONTIME:
             return self.kettle.available and self.kettle.ontime != None
         if self.sensor_type == SENSOR_TYPE_HEATER_ON_COUNT:
@@ -132,6 +140,8 @@ class SkySensor(SensorEntity):
     def device_class(self):
         if self.sensor_type == SENSOR_TYPE_ENERGY:
             return SensorDeviceClass.ENERGY
+        if self.sensor_type == SENSOR_TYPE_POWER:
+            return SensorDeviceClass.POWER
         if self.sensor_type == SENSOR_TYPE_ONTIME:
             return SensorDeviceClass.DURATION
         if self.sensor_type == SENSOR_TYPE_WATER_FRESHNESS:
@@ -142,6 +152,8 @@ class SkySensor(SensorEntity):
     def state_class(self):
         if self.sensor_type == SENSOR_TYPE_ENERGY:
             return SensorStateClass.TOTAL_INCREASING
+        if self.sensor_type == SENSOR_TYPE_POWER:
+            return SensorStateClass.MEASUREMENT
         if self.sensor_type == SENSOR_TYPE_ONTIME:
             return SensorStateClass.TOTAL_INCREASING
         if self.sensor_type == SENSOR_TYPE_HEATER_ON_COUNT:
@@ -156,7 +168,9 @@ class SkySensor(SensorEntity):
     @property
     def native_unit_of_measurement(self):
         if self.sensor_type == SENSOR_TYPE_ENERGY:
-            return UnitOfEnergy.WATT_HOUR
+            return UnitOfEnergy.KILO_WATT_HOUR
+        if self.sensor_type == SENSOR_TYPE_POWER:
+            return UnitOfPower.WATT
         if self.sensor_type == SENSOR_TYPE_ONTIME:
             return UnitOfTime.SECONDS
         if self.sensor_type == SENSOR_TYPE_WATER_FRESHNESS:
@@ -168,7 +182,11 @@ class SkySensor(SensorEntity):
     @property
     def native_value(self):
         if self.sensor_type == SENSOR_TYPE_ENERGY:
-            return self.kettle.energy_wh
+            e = self.kettle.energy_wh
+            return round(e / 1000.0, 2) if e is not None else None
+        if self.sensor_type == SENSOR_TYPE_POWER:
+            pw = self.kettle.power_w
+            return 0 if pw is None else pw
         if self.sensor_type == SENSOR_TYPE_ONTIME:
             return self.kettle.ontime.total_seconds()
         if self.sensor_type == SENSOR_TYPE_HEATER_ON_COUNT:

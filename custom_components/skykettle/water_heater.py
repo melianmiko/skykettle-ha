@@ -137,6 +137,7 @@ class SkyWaterHeater(WaterHeaterEntity):
             "ontime_seconds": self.kettle.ontime.total_seconds() if self.kettle.ontime else None,
             "ontime_string": str(self.kettle.ontime),
             "energy_wh": self.kettle.energy_wh,
+            "power_w": self.kettle.power_w,
             "heater_on_count": self.kettle.heater_on_count,
             "user_on_count": self.kettle.user_on_count,
             "sound_enabled": self.kettle.sound_enabled,
