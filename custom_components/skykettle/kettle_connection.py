@@ -52,6 +52,9 @@ class KettleConnection(SkyKettle):
         self._colors = {}
         self._disposed = False
         self._last_data = None
+        self._prev_energy_wh = None
+        self._prev_energy_timestamp = None
+        self._power_w = None
 
     async def command(self, command, params=[]):
         if self._disposed:
@@ -90,13 +93,20 @@ class KettleConnection(SkyKettle):
         if self._disposed:
             raise DisposedError()
         if self._client and self._client.is_connected: return
-        self._device = bluetooth.async_ble_device_from_address(self.hass, self._mac)
+        self._device = bluetooth.async_ble_device_from_address(
+            self.hass, self._mac, connectable=True
+        )
+        if not self._device:
+            raise IOError("Device not found")
         _LOGGER.debug("Connecting to the Kettle...")
         self._client = await establish_connection(
             BleakClientWithServiceCache,
             self._device,
             self._device.name or "Unknown Device",
-            max_attempts=3
+            max_attempts=3,
+            ble_device_callback=lambda: bluetooth.async_ble_device_from_address(
+                self.hass, self._mac, connectable=True
+            ),
         )
         _LOGGER.debug("Connected to the Kettle")
         await self._client.start_notify(KettleConnection.UUID_RX, self._rx_callback)
@@ -221,6 +231,25 @@ class KettleConnection(SkyKettle):
                 if self._last_get_stats + KettleConnection.STATS_INTERVAL < monotonic() or force_stats:
                     self._last_get_stats = monotonic()
                     self._stats = await self.get_stats()
+                    # Compute power from energy delta
+                    now = monotonic()
+                    if self._stats and self._stats.energy_wh is not None:
+                        energy_wh = self._stats.energy_wh
+                        if self._prev_energy_wh is not None and self._prev_energy_timestamp is not None:
+                            if energy_wh >= self._prev_energy_wh:
+                                elapsed_hours = (now - self._prev_energy_timestamp) / 3600.0
+                                if elapsed_hours > 0:
+                                    self._power_w = (energy_wh - self._prev_energy_wh) / elapsed_hours
+                                else:
+                                    self._power_w = 0.0
+                            else:
+                                self._power_w = None
+                        else:
+                            self._power_w = None
+                        self._prev_energy_wh = energy_wh
+                        self._prev_energy_timestamp = now
+                    else:
+                        self._power_w = None
                     self._light_switch_boil = await self.get_light_switch(SkyKettle.LIGHT_BOIL)
                     self._light_switch_sync = await self.get_light_switch(SkyKettle.LIGHT_SYNC)
                     self._lamp_auto_off_hours = await self.get_lamp_auto_off_hours()
@@ -472,6 +501,10 @@ class KettleConnection(SkyKettle):
     def energy_wh(self):
         if not self._stats: return None
         return self._stats.energy_wh
+
+    @property
+    def power_w(self):
+        return self._power_w
 
     @property
     def heater_on_count(self):
