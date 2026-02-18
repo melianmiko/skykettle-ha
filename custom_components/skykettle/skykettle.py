@@ -50,11 +50,11 @@ class SkyKettle():
     MODE_LAMP = 0x03
     MODE_GAME = 0x04
     MODE_NAMES = {
-        MODE_BOIL: "Boil",
-        MODE_HEAT: "Heat",
-        MODE_BOIL_HEAT: "Boil+Heat",
-        MODE_LAMP: "Lamp",
-        MODE_GAME: "Light"
+        MODE_BOIL: "boil",
+        MODE_HEAT: "heat",
+        MODE_BOIL_HEAT: "boil_heat",
+        MODE_LAMP: "lamp",
+        MODE_GAME: "light"
     }
 
     LIGHT_BOIL = 0x00

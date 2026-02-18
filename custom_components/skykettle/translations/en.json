@@ -48,5 +48,20 @@
                 }
             }
         }
+    },
+    "entity": {
+        "water_heater": {
+            "skykettle": {
+                "name": "Kettle",
+                "state": {
+                    "off": "Off",
+                    "boil": "Boiling",
+                    "boil_heat": "Boiling + Heating",
+                    "heat": "Heating",
+                    "lamp": "Nightlight",
+                    "light": "Light"
+                }
+            }
+        }
     }
 }
