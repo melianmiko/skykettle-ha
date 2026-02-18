@@ -186,7 +186,7 @@ class SkySensor(SensorEntity):
             return round(e / 1000.0, 2) if e is not None else None
         if self.sensor_type == SENSOR_TYPE_POWER:
             pw = self.kettle.power_w
-            return 0 if pw is None else pw
+            return pw
         if self.sensor_type == SENSOR_TYPE_ONTIME:
             return self.kettle.ontime.total_seconds()
         if self.sensor_type == SENSOR_TYPE_HEATER_ON_COUNT:
